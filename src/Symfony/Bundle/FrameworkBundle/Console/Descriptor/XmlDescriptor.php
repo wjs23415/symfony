@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Symfony package.
+ *
+ * (c) Fabien Potencier <fabien@symfony.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Symfony\Bundle\FrameworkBundle\Console\Descriptor;
 
 use Symfony\Component\DependencyInjection\Alias;
@@ -80,6 +89,14 @@ class XmlDescriptor extends Descriptor
     protected function describeContainerAlias(Alias $alias, array $options = array())
     {
         $this->writeDocument($this->getContainerAliasDocument($alias, isset($options['id']) ? $options['id'] : null));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeContainerParameter($parameter, array $options = array())
+    {
+        $this->writeDocument($this->getContainerParameterDocument($parameter, $options));
     }
 
     /**
@@ -203,7 +220,7 @@ class XmlDescriptor extends Descriptor
 
     /**
      * @param ContainerBuilder $builder
-     * @param boolean          $showPrivate
+     * @param bool             $showPrivate
      *
      * @return \DOMDocument
      */
@@ -251,7 +268,7 @@ class XmlDescriptor extends Descriptor
     /**
      * @param ContainerBuilder $builder
      * @param string|null      $tag
-     * @param boolean          $showPrivate
+     * @param bool             $showPrivate
      *
      * @return \DOMDocument
      */
@@ -279,7 +296,7 @@ class XmlDescriptor extends Descriptor
     /**
      * @param Definition  $definition
      * @param string|null $id
-     * @param boolean     $omitTags
+     * @param bool        $omitTags
      *
      * @return \DOMDocument
      */
@@ -293,9 +310,25 @@ class XmlDescriptor extends Descriptor
         }
 
         $serviceXML->setAttribute('class', $definition->getClass());
+
+        if ($definition->getFactoryClass()) {
+            $serviceXML->setAttribute('factory-class', $definition->getFactoryClass());
+        }
+
+        if ($definition->getFactoryService()) {
+            $serviceXML->setAttribute('factory-service', $definition->getFactoryService());
+        }
+
+        if ($definition->getFactoryMethod()) {
+            $serviceXML->setAttribute('factory-method', $definition->getFactoryMethod());
+        }
+
         $serviceXML->setAttribute('scope', $definition->getScope());
         $serviceXML->setAttribute('public', $definition->isPublic() ? 'true' : 'false');
         $serviceXML->setAttribute('synthetic', $definition->isSynthetic() ? 'true' : 'false');
+        $serviceXML->setAttribute('lazy', $definition->isLazy() ? 'true' : 'false');
+        $serviceXML->setAttribute('synchronized', $definition->isSynchronized() ? 'true' : 'false');
+        $serviceXML->setAttribute('abstract', $definition->isAbstract() ? 'true' : 'false');
         $serviceXML->setAttribute('file', $definition->getFile());
 
         if (!$omitTags) {
@@ -310,7 +343,7 @@ class XmlDescriptor extends Descriptor
                         foreach ($parameters as $name => $value) {
                             $tagXML->appendChild($parameterXML = $dom->createElement('parameter'));
                             $parameterXML->setAttribute('name', $name);
-                            $parameterXML->textContent = $value;
+                            $parameterXML->appendChild(new \DOMText($this->formatParameter($value)));
                         }
                     }
                 }
@@ -337,6 +370,26 @@ class XmlDescriptor extends Descriptor
 
         $aliasXML->setAttribute('service', (string) $alias);
         $aliasXML->setAttribute('public', $alias->isPublic() ? 'true' : 'false');
+
+        return $dom;
+    }
+
+    /**
+     * @param string $parameter
+     * @param array  $options
+     *
+     * @return \DOMDocument
+     */
+    private function getContainerParameterDocument($parameter, $options = array())
+    {
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->appendChild($parameterXML = $dom->createElement('parameter'));
+
+        if (isset($options['parameter'])) {
+            $parameterXML->setAttribute('key', $options['parameter']);
+        }
+
+        $parameterXML->appendChild(new \DOMText($this->formatParameter($parameter)));
 
         return $dom;
     }

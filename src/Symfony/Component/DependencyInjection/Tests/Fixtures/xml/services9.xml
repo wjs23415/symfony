@@ -19,6 +19,10 @@
       <argument type="service" id="service_container"/>
       <property name="foo">bar</property>
       <property name="moo" type="service" id="foo.baz"/>
+      <property name="qux" type="collection">
+        <property key="%foo%">foo is %foo%</property>
+        <property key="foobar">%foo%</property>
+      </property>
       <call method="setBar">
         <argument type="service" id="bar"/>
       </call>
@@ -84,6 +88,9 @@
     <service id="configured_service" class="stdClass">
       <configurator service="configurator_service" method="configureStdClass"/>
     </service>
+    <service id="decorated" class="stdClass"/>
+    <service id="decorator_service" class="stdClass" decorates="decorated"/>
+    <service id="decorator_service_with_name" class="stdClass" decorates="decorated" decoration-inner-name="decorated.pif-pouf"/>
     <service id="alias_for_foo" alias="foo"/>
     <service id="alias_for_alias" alias="foo"/>
   </services>

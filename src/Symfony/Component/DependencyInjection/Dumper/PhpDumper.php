@@ -61,7 +61,7 @@ class PhpDumper extends Dumper
     private $proxyDumper;
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      *
      * @api
      */
@@ -69,7 +69,7 @@ class PhpDumper extends Dumper
     {
         parent::__construct($container);
 
-        $this->inlinedDefinitions = new \SplObjectStorage;
+        $this->inlinedDefinitions = new \SplObjectStorage();
     }
 
     /**
@@ -373,7 +373,7 @@ class PhpDumper extends Dumper
      * @param string     $id
      * @param Definition $definition
      *
-     * @return Boolean
+     * @return bool
      */
     private function isSimpleInstance($id, $definition)
     {
@@ -557,7 +557,7 @@ EOF;
 
         if ($definition->isLazy()) {
             $lazyInitialization    = '$lazyLoad = true';
-            $lazyInitializationDoc = "\n     * @param boolean \$lazyLoad whether to try lazy-loading the service with a proxy\n     *";
+            $lazyInitializationDoc = "\n     * @param bool    \$lazyLoad whether to try lazy-loading the service with a proxy\n     *";
         } else {
             $lazyInitialization    = '';
             $lazyInitializationDoc = '';
@@ -944,7 +944,7 @@ EOF;
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getParameterBag()
     {
@@ -979,7 +979,7 @@ EOF;
      *
      * @param array   $parameters
      * @param string  $path
-     * @param integer $indent
+     * @param int     $indent
      *
      * @return string
      *
@@ -997,6 +997,8 @@ EOF;
                 throw new InvalidArgumentException(sprintf('You cannot dump a container with parameters that contain service definitions. Definition for "%s" found in "%s".', $value->getClass(), $path.'/'.$key));
             } elseif ($value instanceof Reference) {
                 throw new InvalidArgumentException(sprintf('You cannot dump a container with parameters that contain references to other services (reference to service "%s" found in "%s").', $value, $path.'/'.$key));
+            } elseif ($value instanceof Expression) {
+                throw new InvalidArgumentException(sprintf('You cannot dump a container with parameters that contain expressions. Expression "%s" found in "%s".', $value, $path.'/'.$key));
             } else {
                 $value = var_export($value, true);
             }
@@ -1129,10 +1131,10 @@ EOF;
      *
      * @param string  $id
      * @param array   $arguments
-     * @param Boolean $deep
+     * @param bool    $deep
      * @param array   $visited
      *
-     * @return Boolean
+     * @return bool
      */
     private function hasReference($id, array $arguments, $deep = false, array $visited = array())
     {
@@ -1167,7 +1169,7 @@ EOF;
      * Dumps values.
      *
      * @param array   $value
-     * @param Boolean $interpolate
+     * @param bool    $interpolate
      *
      * @return string
      *

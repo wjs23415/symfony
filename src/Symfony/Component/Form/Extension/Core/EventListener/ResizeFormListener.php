@@ -35,18 +35,18 @@ class ResizeFormListener implements EventSubscriberInterface
 
     /**
      * Whether children could be added to the group
-     * @var Boolean
+     * @var bool
      */
     protected $allowAdd;
 
     /**
      * Whether children could be removed from the group
-     * @var Boolean
+     * @var bool
      */
     protected $allowDelete;
 
     /**
-     * @var Boolean
+     * @var bool
      */
     private $deleteEmpty;
 
@@ -163,10 +163,16 @@ class ResizeFormListener implements EventSubscriberInterface
         // The data mapper only adds, but does not remove items, so do this
         // here
         if ($this->allowDelete) {
-            foreach ($data as $name => $childData) {
+            $toDelete = array();
+
+            foreach ($data as $name => $child) {
                 if (!$form->has($name)) {
-                    unset($data[$name]);
+                    $toDelete[] = $name;
                 }
+            }
+
+            foreach ($toDelete as $name) {
+                unset($data[$name]);
             }
         }
 

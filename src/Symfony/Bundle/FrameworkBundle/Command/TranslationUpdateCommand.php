@@ -11,7 +11,6 @@
 
 namespace Symfony\Bundle\FrameworkBundle\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Translation\Catalogue\DiffOperation;
 use Symfony\Component\Translation\Catalogue\MergeOperation;
 use Symfony\Component\Console\Input\InputInterface;
@@ -54,6 +53,10 @@ class TranslationUpdateCommand extends ContainerAwareCommand
                     'Should the update be done'
                 ),
                 new InputOption(
+                    'no-backup', null, InputOption::VALUE_NONE,
+                    'Should backup be disabled'
+                ),
+                new InputOption(
                     'clean', null, InputOption::VALUE_NONE,
                     'Should clean not found messages'
                 )
@@ -67,6 +70,7 @@ message.
 
 <info>php %command.full_name% --dump-messages en AcmeBundle</info>
 <info>php %command.full_name% --force --prefix="new_" fr AcmeBundle</info>
+
 EOF
             )
         ;
@@ -139,10 +143,14 @@ EOF
             }
         }
 
+        if ($input->getOption('no-backup') === true) {
+            $writer->disableBackup();
+        }
+
         // save the files
         if ($input->getOption('force') === true) {
             $output->writeln('Writing files');
-            $writer->writeTranslations($operation->getResult(), $input->getOption('output-format'), array('path' => $bundleTransPath));
+            $writer->writeTranslations($operation->getResult(), $input->getOption('output-format'), array('path' => $bundleTransPath, 'default_locale' => $this->getContainer()->getParameter('kernel.default_locale')));
         }
     }
 }

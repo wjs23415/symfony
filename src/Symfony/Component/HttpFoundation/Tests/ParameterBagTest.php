@@ -205,10 +205,10 @@ class ParameterBagTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('example@example.com', $bag->filter('email', '', false, FILTER_VALIDATE_EMAIL), '->filter() gets a value of parameter as email');
 
-        $this->assertEquals('http://example.com/foo', $bag->filter('url', '', false, FILTER_VALIDATE_URL, array('flags' => FILTER_FLAG_PATH_REQUIRED)), '->filter() gets a value of parameter as url with a path');
+        $this->assertEquals('http://example.com/foo', $bag->filter('url', '', false, FILTER_VALIDATE_URL, array('flags' => FILTER_FLAG_PATH_REQUIRED)), '->filter() gets a value of parameter as URL with a path');
 
         // This test is repeated for code-coverage
-        $this->assertEquals('http://example.com/foo', $bag->filter('url', '', false, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED), '->filter() gets a value of parameter as url with a path');
+        $this->assertEquals('http://example.com/foo', $bag->filter('url', '', false, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED), '->filter() gets a value of parameter as URL with a path');
 
         $this->assertFalse($bag->filter('dec', '', false, FILTER_VALIDATE_INT, array(
             'flags'   => FILTER_FLAG_ALLOW_HEX,
@@ -250,5 +250,18 @@ class ParameterBagTest extends \PHPUnit_Framework_TestCase
         $bag = new ParameterBag($parameters);
 
         $this->assertEquals(count($parameters), count($bag));
+    }
+
+    /**
+     * @covers Symfony\Component\HttpFoundation\ParameterBag::getBoolean
+     */
+    public function testGetBoolean()
+    {
+        $parameters = array('string_true' => 'true', 'string_false' => 'false');
+        $bag = new ParameterBag($parameters);
+
+        $this->assertTrue($bag->getBoolean('string_true'), '->getBoolean() gets the string true as boolean true');
+        $this->assertFalse($bag->getBoolean('string_false'), '->getBoolean() gets the string false as boolean false');
+        $this->assertFalse($bag->getBoolean('unknown'), '->getBoolean() returns false if a parameter is not defined');
     }
 }

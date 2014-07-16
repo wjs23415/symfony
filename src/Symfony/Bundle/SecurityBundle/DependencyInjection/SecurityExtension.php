@@ -66,6 +66,11 @@ class SecurityExtension extends Extension
         $loader->load('templating_twig.xml');
         $loader->load('collectors.xml');
 
+        if (!class_exists('Symfony\Component\ExpressionLanguage\ExpressionLanguage')) {
+            $container->removeDefinition('security.expression_language');
+            $container->removeDefinition('security.access.expression_voter');
+        }
+
         // set some global scalars
         $container->setParameter('security.access.denied_url', $config['access_denied_url']);
         $container->setParameter('security.authentication.manager.erase_credentials', $config['erase_credentials']);
@@ -236,7 +241,7 @@ class SecurityExtension extends Extension
         $mapDef->replaceArgument(1, $map);
 
         // add authentication providers to authentication manager
-        $authenticationProviders = array_map(function($id) {
+        $authenticationProviders = array_map(function ($id) {
             return new Reference($id);
         }, array_values(array_unique($authenticationProviders)));
         $container
@@ -254,7 +259,8 @@ class SecurityExtension extends Extension
         } elseif (isset($firewall['pattern']) || isset($firewall['host'])) {
             $pattern = isset($firewall['pattern']) ? $firewall['pattern'] : null;
             $host = isset($firewall['host']) ? $firewall['host'] : null;
-            $matcher = $this->createRequestMatcher($container, $pattern, $host);
+            $methods = isset($firewall['methods']) ? $firewall['methods'] : array();
+            $matcher = $this->createRequestMatcher($container, $pattern, $host, $methods);
         }
 
         // Security disabled?
@@ -682,7 +688,7 @@ class SecurityExtension extends Extension
     {
         if (null === $this->expressionLanguage) {
             if (!class_exists('Symfony\Component\ExpressionLanguage\ExpressionLanguage')) {
-                throw new RuntimeException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
+                throw new \RuntimeException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
             }
             $this->expressionLanguage = new ExpressionLanguage();
         }

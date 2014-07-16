@@ -41,12 +41,12 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('trusted_proxies')
                     ->beforeNormalization()
-                        ->ifTrue(function($v) { return !is_array($v) && !is_null($v); })
-                        ->then(function($v) { return is_bool($v) ? array() : preg_split('/\s*,\s*/', $v); })
+                        ->ifTrue(function ($v) { return !is_array($v) && !is_null($v); })
+                        ->then(function ($v) { return is_bool($v) ? array() : preg_split('/\s*,\s*/', $v); })
                     ->end()
                     ->prototype('scalar')
                         ->validate()
-                            ->ifTrue(function($v) {
+                            ->ifTrue(function ($v) {
                                 if (empty($v)) {
                                     return false;
                                 }
@@ -70,8 +70,8 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('default_locale')->defaultValue('en')->end()
                 ->arrayNode('trusted_hosts')
                     ->beforeNormalization()
-                        ->ifTrue(function($v) { return is_string($v); })
-                        ->then(function($v) { return array($v); })
+                        ->ifTrue(function ($v) { return is_string($v); })
+                        ->then(function ($v) { return array($v); })
                     ->end()
                     ->prototype('scalar')->end()
                 ->end()
@@ -85,6 +85,7 @@ class Configuration implements ConfigurationInterface
         $this->addProfilerSection($rootNode);
         $this->addRouterSection($rootNode);
         $this->addSessionSection($rootNode);
+        $this->addRequestSection($rootNode);
         $this->addTemplatingSection($rootNode);
         $this->addTranslatorSection($rootNode);
         $this->addValidationSection($rootNode);
@@ -188,7 +189,7 @@ class Configuration implements ConfigurationInterface
                                 ->end()
                                 ->scalarNode('service')->end()
                                 ->arrayNode('ips')
-                                    ->beforeNormalization()->ifString()->then(function($v) { return array($v); })->end()
+                                    ->beforeNormalization()->ifString()->then(function ($v) { return array($v); })->end()
                                     ->prototype('scalar')->end()
                                 ->end()
                             ->end()
@@ -243,7 +244,7 @@ class Configuration implements ConfigurationInterface
                         ->booleanNode('cookie_secure')->end()
                         ->booleanNode('cookie_httponly')->end()
                         ->scalarNode('gc_divisor')->end()
-                        ->scalarNode('gc_probability')->end()
+                        ->scalarNode('gc_probability')->defaultValue(1)->end()
                         ->scalarNode('gc_maxlifetime')->end()
                         ->scalarNode('save_path')->defaultValue('%kernel.cache_dir%/sessions')->end()
                         ->integerNode('metadata_update_threshold')
@@ -256,9 +257,38 @@ class Configuration implements ConfigurationInterface
         ;
     }
 
+    private function addRequestSection(ArrayNodeDefinition $rootNode)
+    {
+        $rootNode
+            ->children()
+                ->arrayNode('request')
+                    ->info('request configuration')
+                    ->canBeUnset()
+                    ->fixXmlConfig('format')
+                    ->children()
+                        ->arrayNode('formats')
+                            ->useAttributeAsKey('name')
+                            ->prototype('array')
+                                ->beforeNormalization()
+                                    ->ifTrue(function ($v) { return is_array($v) && isset($v['mime_type']); })
+                                    ->then(function ($v) { return $v['mime_type']; })
+                                ->end()
+                                ->beforeNormalization()
+                                    ->ifTrue(function ($v) { return !is_array($v); })
+                                    ->then(function ($v) { return array($v); })
+                                ->end()
+                                ->prototype('scalar')->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end()
+        ;
+    }
+
     private function addTemplatingSection(ArrayNodeDefinition $rootNode)
     {
-        $organizeUrls = function($urls) {
+        $organizeUrls = function ($urls) {
             $urls += array(
                 'http' => array(),
                 'ssl'  => array(),
@@ -295,8 +325,8 @@ class Configuration implements ConfigurationInterface
                                     ->addDefaultChildrenIfNoneSet()
                                     ->prototype('scalar')->defaultValue('FrameworkBundle:Form')->end()
                                     ->validate()
-                                        ->ifTrue(function($v) {return !in_array('FrameworkBundle:Form', $v); })
-                                        ->then(function($v){
+                                        ->ifTrue(function ($v) {return !in_array('FrameworkBundle:Form', $v); })
+                                        ->then(function ($v) {
                                             return array_merge(array('FrameworkBundle:Form'), $v);
                                         })
                                     ->end()
@@ -310,8 +340,8 @@ class Configuration implements ConfigurationInterface
                             ->performNoDeepMerging()
                             ->addDefaultsIfNotSet()
                             ->beforeNormalization()
-                                ->ifTrue(function($v) { return !is_array($v); })
-                                ->then(function($v) { return array($v); })
+                                ->ifTrue(function ($v) { return !is_array($v); })
+                                ->then(function ($v) { return array($v); })
                             ->end()
                             ->beforeNormalization()
                                 ->always()
@@ -335,8 +365,8 @@ class Configuration implements ConfigurationInterface
                             ->isRequired()
                             ->requiresAtLeastOneElement()
                             ->beforeNormalization()
-                                ->ifTrue(function($v){ return !is_array($v); })
-                                ->then(function($v){ return array($v); })
+                                ->ifTrue(function ($v) { return !is_array($v); })
+                                ->then(function ($v) { return array($v); })
                             ->end()
                             ->prototype('scalar')->end()
                         ->end()
@@ -345,8 +375,8 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->arrayNode('loaders')
                             ->beforeNormalization()
-                                ->ifTrue(function($v){ return !is_array($v); })
-                                ->then(function($v){ return array($v); })
+                                ->ifTrue(function ($v) { return !is_array($v); })
+                                ->then(function ($v) { return array($v); })
                              ->end()
                             ->prototype('scalar')->end()
                         ->end()
@@ -364,8 +394,8 @@ class Configuration implements ConfigurationInterface
                                         ->performNoDeepMerging()
                                         ->addDefaultsIfNotSet()
                                         ->beforeNormalization()
-                                            ->ifTrue(function($v) { return !is_array($v); })
-                                            ->then(function($v) { return array($v); })
+                                            ->ifTrue(function ($v) { return !is_array($v); })
+                                            ->then(function ($v) { return array($v); })
                                         ->end()
                                         ->beforeNormalization()
                                             ->always()
@@ -414,7 +444,25 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('cache')->end()
                         ->booleanNode('enable_annotations')->defaultFalse()->end()
+                        ->arrayNode('static_method')
+                            ->defaultValue(array('loadValidatorMetadata'))
+                            ->prototype('scalar')->end()
+                            ->treatFalseLike(array())
+                            ->validate()
+                                ->ifTrue(function ($v) { return !is_array($v); })
+                                ->then(function ($v) { return (array) $v; })
+                            ->end()
+                        ->end()
                         ->scalarNode('translation_domain')->defaultValue('validators')->end()
+                        ->booleanNode('strict_email')->defaultFalse()->end()
+                        ->enumNode('api')
+                            ->values(array('2.4', '2.5', '2.5-bc', 'auto'))
+                            ->defaultValue('auto')
+                            ->beforeNormalization()
+                                ->ifTrue(function ($v) { return is_scalar($v); })
+                                ->then(function ($v) { return (string) $v; })
+                            ->end()
+                        ->end()
                     ->end()
                 ->end()
             ->end()

@@ -16,7 +16,7 @@ $container->
     setFactoryClass('Bar\\FooClass')->
     setFactoryMethod('getInstance')->
     setArguments(array('foo', new Reference('foo.baz'), array('%foo%' => 'foo is %foo%', 'foobar' => '%foo%'), true, new Reference('service_container')))->
-    setProperties(array('foo' => 'bar', 'moo' => new Reference('foo.baz')))->
+    setProperties(array('foo' => 'bar', 'moo' => new Reference('foo.baz'), 'qux' => array('%foo%' => 'foo is %foo%', 'foobar' => '%foo%')))->
     addMethodCall('setBar', array(new Reference('bar')))->
     addMethodCall('initialize')->
     setConfigurator('sc_configure')
@@ -91,6 +91,17 @@ $container
 $container
     ->register('configured_service', 'stdClass')
     ->setConfigurator(array(new Reference('configurator_service'), 'configureStdClass'))
+;
+$container
+    ->register('decorated', 'stdClass')
+;
+$container
+    ->register('decorator_service', 'stdClass')
+    ->setDecoratedService('decorated')
+;
+$container
+    ->register('decorator_service_with_name', 'stdClass')
+    ->setDecoratedService('decorated', 'decorated.pif-pouf')
 ;
 
 return $container;

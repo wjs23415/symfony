@@ -63,8 +63,12 @@ class UniqueValidatorTest extends \PHPUnit_Framework_TestCase
             ->method('hasField')
             ->will($this->returnValue(true))
         ;
-        $refl = $this->getMockBuilder('Doctrine\Common\Reflection\StaticReflectionProperty')
+        $reflParser = $this->getMockBuilder('Doctrine\Common\Reflection\StaticReflectionParser')
             ->disableOriginalConstructor()
+            ->getMock()
+        ;
+        $refl = $this->getMockBuilder('Doctrine\Common\Reflection\StaticReflectionProperty')
+            ->setConstructorArgs(array($reflParser, 'property-name'))
             ->setMethods(array('getValue'))
             ->getMock()
         ;
@@ -282,7 +286,7 @@ class UniqueValidatorTest extends \PHPUnit_Framework_TestCase
         $repository->expects($this->once())
             ->method('findByCustom')
             ->will(
-                $this->returnCallback(function() use ($entity) {
+                $this->returnCallback(function () use ($entity) {
                     $returnValue = array(
                         $entity,
                     );
@@ -328,6 +332,23 @@ class UniqueValidatorTest extends \PHPUnit_Framework_TestCase
 
         $violationsList = $validator->validate($associated2);
         $this->assertEquals(1, $violationsList->count());
+    }
+
+    public function testAssociatedEntityWithNull()
+    {
+        $entityManagerName = "foo";
+        $em = DoctrineTestHelper::createTestEntityManager();
+        $this->createSchema($em);
+        $validator = $this->createValidator($entityManagerName, $em, 'Symfony\Bridge\Doctrine\Tests\Fixtures\AssociationEntity', array('single'), null, 'findBy', false);
+
+        $associated = new AssociationEntity();
+        $associated->single = null;
+
+        $em->persist($associated);
+        $em->flush();
+
+        $violationsList = $validator->validate($associated);
+        $this->assertEquals(0, $violationsList->count());
     }
 
     /**
